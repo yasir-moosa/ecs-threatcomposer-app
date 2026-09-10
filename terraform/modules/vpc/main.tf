@@ -72,3 +72,19 @@ resource "aws_subnet" "private_sn_2b" {
     Project = "ecs"
   }
 }
+
+
+# Regional NAT Gateway Section
+
+resource "aws_nat_gateway" "ecs_nat" {
+
+  vpc_id            = aws_vpc.ecs_vpc.id
+  availability_mode = "regional"
+  depends_on        = [aws_internet_gateway.ecs_igw]
+
+
+  tags = {
+    Name    = "ecs-regional-natgw"
+    Project = "ecs"
+  }
+}
