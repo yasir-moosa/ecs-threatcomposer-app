@@ -88,3 +88,57 @@ resource "aws_nat_gateway" "ecs_nat" {
     Project = "ecs"
   }
 }
+
+# # Route Tables Section
+# Public Route Table
+resource "aws_route_table" "ecs_public_rt" {
+  vpc_id = aws_vpc.ecs_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.ecs_igw.id
+  }
+
+  tags = {
+    Name    = "ecs-public-rt"
+    Project = "ecs"
+  }
+}
+
+# Private Route Table
+
+resource "aws_route_table" "ecs_private_rt" {
+  vpc_id = aws_vpc.ecs_vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.ecs_nat.id
+  }
+
+  tags = {
+    Name    = "ecs-private-rt"
+    Project = "ecs"
+  }
+}
+
+# # Route Table Association With Corresponding Subnets
+
+resource "aws_route_table_association" "ecs_public_rt_2a_association" {
+  subnet_id      = aws_subnet.public_sn_2a.id
+  route_table_id = aws_route_table.ecs_public_rt.id
+}
+
+resource "aws_route_table_association" "ecs_public_rt_2b_association" {
+  subnet_id      = aws_subnet.public_sn_2b.id
+  route_table_id = aws_route_table.ecs_public_rt.id
+}
+
+resource "aws_route_table_association" "ecs_private_rt_2a_association" {
+  subnet_id      = aws_subnet.private_sn_2a
+  route_table_id = aws_route_table.ecs_private_rt.id
+}
+
+resource "aws_route_table_association" "ecs_private_rt_2b_association" {
+  subnet_id      = aws_subnet.private_sn_2b.id
+  route_table_id = aws_route_table.ecs_private_rt.id
+}
