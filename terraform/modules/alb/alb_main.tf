@@ -4,7 +4,7 @@ resource "aws_lb" "alb" {
   name               = "basic-alb"
   load_balancer_type = "application"
   security_groups    = [var.sg_id]
-  subnets            = var.subnet_id
+  subnets            = var.subnet_ids
   internal           = false
 
 }
