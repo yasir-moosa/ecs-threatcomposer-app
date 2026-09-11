@@ -25,6 +25,17 @@ module "vpc" {
   source = "./modules/vpc"
 }
 
+module "alb" {
+  source     = "./modules/alb"
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = [module.vpc.ecs_subnet_public_2a_id, module.vpc.ecs_subnet_public_2b_id]
+  sg_id      = module.sg.alb_sg_id
+  app_port   = 80
+
+
+}
+
+
 # vpc
 # subnet
 # igw
