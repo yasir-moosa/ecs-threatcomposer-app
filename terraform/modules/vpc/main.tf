@@ -134,7 +134,7 @@ resource "aws_route_table_association" "ecs_public_rt_2b_association" {
 }
 
 resource "aws_route_table_association" "ecs_private_rt_2a_association" {
-  subnet_id      = aws_subnet.private_sn_2a
+  subnet_id      = aws_subnet.private_sn_2a.id
   route_table_id = aws_route_table.ecs_private_rt.id
 }
 
