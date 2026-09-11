@@ -28,7 +28,7 @@ module "vpc" {
 module "sg" {
   source        = "./modules/sg"
   vpc_id        = module.vpc.vpc_id
-  ecs_task_port = 80
+  ecs_task_port = 8080
 }
 
 module "alb" {
@@ -36,7 +36,7 @@ module "alb" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = [module.vpc.public_subnet_2a_id, module.vpc.public_subnet_2b_id]
   sg_id      = module.sg.alb_sg_id
-  app_port   = 80
+  app_port   = 8080
 }
 
 module "ecs" {
@@ -45,7 +45,7 @@ module "ecs" {
   private_subnet_ids = [module.vpc.private_subnet_2a_id, module.vpc.private_subnet_2b_id]
   ecs_task_sg_id     = module.sg.ecs_task_sg_id
   target_group_arn   = module.alb.target_group_arn
-  app_port           = 80
+  app_port           = 8080
   aws_region         = var.region
 }
 

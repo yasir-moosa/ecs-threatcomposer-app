@@ -1,4 +1,4 @@
-#ALB 
+#ALB
 resource "aws_lb" "alb" {
 
   name               = "basic-alb"
@@ -12,12 +12,15 @@ resource "aws_lb" "alb" {
 # Target Group
 
 resource "aws_lb_target_group" "tg" {
-  name        = "basic-tg"
+  name_prefix = "tg-"
   port        = var.app_port
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = var.vpc_id
 
+  lifecycle {
+    create_before_destroy = true
+  }
 
   health_check {
 
@@ -34,7 +37,7 @@ resource "aws_lb_target_group" "tg" {
 
 
 
-# Listener 
+# Listener
 
 resource "aws_lb_listener" "HTTP" {
 
