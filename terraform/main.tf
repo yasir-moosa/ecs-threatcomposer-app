@@ -48,15 +48,3 @@ module "ecs" {
   app_port           = 8080
   aws_region         = var.region
 }
-
-# vpc
-# subnet
-# igw
-# reg nat
-# route tables
-# sg
-
-# alb
-#
-# ecs
-# cluster
