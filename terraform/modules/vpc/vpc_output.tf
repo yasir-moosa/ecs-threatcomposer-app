@@ -8,22 +8,22 @@ output "vpc_cidr_block" {
   value = aws_vpc.ecs_vpc.cidr_block
 }
 # Public Subnet Outputs
-output "public_subnet_2a_ID" {
+output "public_subnet_2a_id" {
   value       = aws_subnet.public_sn_2a.id
   description = "ECS public subnet 2a id"
 }
 
-output "public_subnet_2b_ID" {
+output "public_subnet_2b_id" {
   value       = aws_subnet.public_sn_2b.id
   description = "ECS public subnet 2b id"
 }
 
-output "private_subnet_2a_ID" {
+output "private_subnet_2a_id" {
   value       = aws_subnet.private_sn_2a.id
   description = "ECS private subnet 2a id"
 }
 
-output "private_subnet_2b_ID" {
+output "private_subnet_2b_id" {
   value       = aws_subnet.private_sn_2b.id
   description = "ECS private subnet 2b id"
 }
