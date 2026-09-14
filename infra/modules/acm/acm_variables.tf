@@ -1,9 +1,9 @@
 variable "fqdn" {
   type        = string
-  description = "full domain, e.g. tm.example.com"
+  description = "full custom domain such as xyz.example.com"
 }
 
 variable "zone_id" {
   type        = string
-  description = "Route53 hosted zone ID for the domain"
+  description = "route53 hosted zone ID for the domain"
 }

@@ -2,6 +2,7 @@ resource "aws_acm_certificate" "cert" {
   domain_name       = var.fqdn
   validation_method = "DNS"
 
+  # This lifecycle block is to ensure a certificate is always there even when this one gets replaced
   lifecycle {
     create_before_destroy = true
   }
