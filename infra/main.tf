@@ -21,6 +21,14 @@ provider "aws" {
   region = var.region
 }
 
+# look up for the existing hosted zone
+data "aws_route53_zone" "this" {
+
+  name         = var.domain_name
+  private_zone = false
+
+}
+
 module "vpc" {
   source = "./modules/vpc"
 }
@@ -32,13 +40,28 @@ module "sg" {
 }
 
 module "alb" {
-  source     = "./modules/alb"
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = [module.vpc.public_subnet_2a_id, module.vpc.public_subnet_2b_id]
-  sg_id      = module.sg.alb_sg_id
-  app_port   = 8080
+  source          = "./modules/alb"
+  vpc_id          = module.vpc.vpc_id
+  subnet_ids      = [module.vpc.public_subnet_2a_id, module.vpc.public_subnet_2b_id]
+  sg_id           = module.sg.alb_sg_id
+  app_port        = 8080
+  certificate_arn = module.acm.certificate_arn
 }
 
+# Requests SSL cert for tm.yasirmoosa.tech and confirms it via CNAME in hosted zone
+module "acm" {
+  source  = "./modules/acm"
+  fqdn    = "${var.subdomain}.${var.domain_name}"
+  zone_id = data.aws_route53_zone.this.zone_id
+}
+# Points tm.yasirmoosa.tech to the ALB
+module "route53" {
+  source       = "./modules/route53"
+  fqdn         = "${var.subdomain}.${var.domain_name}"
+  zone_id      = data.aws_route53_zone.this.zone_id
+  alb_dns_name = module.alb.alb_dns_name
+  alb_zone_id  = module.alb.alb_zone_id
+}
 module "ecs" {
   source             = "./modules/ecs"
   vpc_id             = module.vpc.vpc_id
