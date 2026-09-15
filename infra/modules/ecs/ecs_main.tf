@@ -24,9 +24,24 @@ resource "aws_ecs_cluster" "ecs_cluster" {
   }
 }
 
-# Existing IAM role that lets ECS pull images and write logs
-data "aws_iam_role" "ecs_task_execution_role" {
-  name = "ecsTaskExecutionRole"
+# IAM role that lets ECS pull images and write logs (provisioned by Terraform)
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name = "ecsTaskExecutionRole-${var.aws_region}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+    }]
+  })
+}
+
+# Attaching policy to role
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 # Latest image pushed to ECR
@@ -42,7 +57,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   network_mode             = "awsvpc"
   cpu                      = 512
   memory                   = 1024
-  execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
   runtime_platform {
     operating_system_family = "LINUX"
