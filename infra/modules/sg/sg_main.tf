@@ -39,6 +39,18 @@ resource "aws_vpc_security_group_ingress_rule" "alb_http_ingress" {
 
 }
 
+# ALB SG to allow inbound HTTPS from internet
+
+resource "aws_vpc_security_group_ingress_rule" "alb_https_ingress" {
+
+  security_group_id = aws_security_group.alb_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+
+}
+
 # ALB SG to allow outbound only to ECS task SG on the app port
 
 resource "aws_vpc_security_group_egress_rule" "alb_to_ecs_task" {
