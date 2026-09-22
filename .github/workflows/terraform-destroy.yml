@@ -39,6 +39,7 @@ jobs:
 
   terraform-destroy-apply:
     needs: terraform-destroy-plan
+    if: ${{ github.event.inputs.confirm == 'destroy' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
