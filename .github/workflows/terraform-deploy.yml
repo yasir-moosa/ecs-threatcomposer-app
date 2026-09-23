@@ -26,7 +26,17 @@ jobs:
       - name: Terraform Init
         working-directory: infra
         run: terraform init
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v6
+        with:
+          tflint_version: latest
 
+      - name: Run TFLint
+        working-directory: infra
+        run: |
+          tflint --init
+          tflint --recursive
+        continue-on-error: true
       - name: Terraform Plan
         working-directory: infra
         run: terraform plan -out=tfplan
