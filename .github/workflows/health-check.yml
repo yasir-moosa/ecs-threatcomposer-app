@@ -10,12 +10,30 @@ jobs:
   health-check:
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
+    env:
+      MAX_RETRIES: 10
+      RETRY_DELAY: 30
     steps:
+      - name: Wait for ECS tasks to stabilize
+        run: sleep 120
+
       - name: Check app health
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://tm.yasirmoosa.tech/health)
-          if [ "$response" -ne 200 ]; then
+          for i in $(seq 1 ${{ env.MAX_RETRIES }}); do
+            echo "Attempt $i of ${{ env.MAX_RETRIES }}"
+            response=$(curl -s -o /dev/null -w "%{http_code}" https://tm.yasirmoosa.tech/health)
+
+            if [ "$response" -eq 200 ]; then
+              echo "Health check passed"
+              exit 0
+            fi
+
             echo "Health check failed with status $response"
-            exit 1
-          fi
-          echo "Health check passed"
+            if [ $i -lt ${{ env.MAX_RETRIES }} ]; then
+              echo "Retrying in ${{ env.RETRY_DELAY }}s..."
+              sleep ${{ env.RETRY_DELAY }}
+            fi
+          done
+
+          echo "Health check failed after ${{ env.MAX_RETRIES }} attempts"
+          exit 1
