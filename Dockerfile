@@ -9,6 +9,7 @@ COPY /app .
 RUN yarn build
 
 FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS runner
+USER root
 RUN apk update && apk upgrade --no-cache
 USER nginx
 COPY /app/nginx.conf /etc/nginx/nginx.conf
