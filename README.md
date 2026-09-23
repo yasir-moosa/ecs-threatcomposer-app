@@ -6,6 +6,10 @@ I took it and deployed it the way you'd actually run something like this in a jo
 
 Live at: `https://tm.yasirmoosa.tech`
 
+Live at: `https://tm.yasirmoosa.tech`
+
+![Threat Composer demo](images/threat-composer-demo.gif)
+
 ## What this actually does
 
 Threat Composer runs as a Docker container inside ECS Fargate. Traffic comes in through an Application Load Balancer on port 443, gets terminated with a real ACM certificate, and gets routed to whichever Fargate task is healthy at the time. There's no server to patch or SSH into, Fargate handles the compute for you.
@@ -111,13 +115,29 @@ terraform destroy
 
 This leaves the S3 state bucket and ECR repo alone since those are meant to be reused. The ALB and NAT Gateway both cost money by the hour, so don't leave this running if you're not using it.
 
-## Screenshots
+## Proof of application working
 
-*Screenshot of the site over HTTPS here*
+URL used: `tm.yasirmoosa.tech`
 
-*Screenshot of a successful pipeline run here*
+![Threat Composer running](images/threat-composer-demo.gif)
 
-*Screenshot of the CloudWatch dashboard here*
+## Successful Pipeline Runs
+
+### Docker Image Publish
+![Build and Push Image](images/pipeline-build-and-push.png)
+
+### Terraform Plan + Apply
+![Terraform Deploy](images/pipeline-terraform-deploy.png)
+
+### Terraform Plan + Destroy
+![Terraform Destroy](images/pipeline-terraform-destroy.png)
+
+### Domain URL Health Check
+![Post-Deployment Health Check](images/pipeline-health-check.png)
+
+## CloudWatch Dashboard
+
+![CloudWatch dashboard](images/dashboard.png)
 
 ## Notes on some of the design choices
 
