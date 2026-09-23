@@ -15,7 +15,7 @@ Everything from the VPC up is created by Terraform. Nothing was left behind from
 ## Architecture
 
 - A VPC spanning two Availability Zones, with public and private subnets in each
-- A NAT Gateway so the Fargate tasks in the private subnets can pull the image from ECR and reach the internet
+- A regional (multi-AZ) NAT Gateway so the Fargate tasks in the private subnets can pull the image from ECR and reach the internet without needing one NAT Gateway per AZ
 - An Application Load Balancer in the public subnets, listening on 80 and 443
 - Port 80 just redirects straight to 443, nothing serves plain HTTP
 - ECS Fargate service running the Threat Composer container, in the private subnets
@@ -23,6 +23,7 @@ Everything from the VPC up is created by Terraform. Nothing was left behind from
 - ACM certificate for `tm.yasirmoosa.tech`, validated automatically through a DNS record in Route53
 - Route53 hosted zone and A record pointing the subdomain at the load balancer
 - S3 bucket holding the Terraform remote state
+- A CloudWatch dashboard (`ecs-threat-app-dashboard`) showing ECS CPU/memory, recent application logs and ALB request count/latency/5XX/healthy-host metrics in one place
 
 *Architecture diagram here*
 
@@ -56,15 +57,19 @@ Everything from the VPC up is created by Terraform. Nothing was left behind from
 
 There are four workflows, and only one pair of them is actually chained together:
 
-1. **Build and Push Image** runs automatically on a push that touches `app/` or the Dockerfile (or can be triggered manually). It builds the image, tags it with the commit SHA, and pushes it to ECR.
-2. **Terraform Deploy** is manual only, you trigger it from the Actions tab. It's split into two jobs: `terraform-plan` runs `init` and `plan`, saving the plan as an artifact, then `terraform-apply` downloads that exact plan and applies it. This way what gets applied is guaranteed to be what the plan showed, not a fresh plan that might have drifted.
-3. **Post-Deploy Health Check** runs automatically right after Terraform Deploy finishes successfully (or manually on its own). It curls the live site and fails if it doesn't get a healthy response back.
+1. **Build and Push Image** runs automatically on a push that touches `app/` or the Dockerfile (or can be triggered manually). It builds the image, runs a **Trivy vulnerability scan** against it (fails the job on any CRITICAL or HIGH severity fixable CVE so a vulnerable image never reaches ECR) then tags it with the commit SHA and pushes it to ECR.
+2. **Terraform Deploy** is manual only, you trigger it from the Actions tab. It's split into two jobs: `terraform-plan` runs `init` lints the Terraform code with **TFLint** (AWS ruleset + best-practice rules, non-blocking for now) then `plan`, saving the plan as an artifact; `terraform-apply` downloads that exact plan and applies it. This way what gets applied is guaranteed to be what the plan showed, not a fresh plan that might have drifted.
+3. **Post-Deploy Health Check** runs automatically right after Terraform Deploy finishes successfully (or manually on its own). It waits 2 minutes for the ECS tasks to stabilize then curls the live site with up to 10 retries (30s apart) before failing, so it doesn't false-alarm on a service that's still starting up.
 4. **Terraform Destroy** is manual only, and requires typing the word "destroy" into a confirmation field before it'll run anything. Same two-job pattern as Deploy: a `terraform-destroy-plan` job saves exactly what will be torn down, then `terraform-destroy-apply` destroys precisely that.
 
 So a normal app change goes: push to main, image gets built and pushed, that's it, nothing else runs on its own. Deploying the new image into the infra is a deliberate, manual step, and once you trigger it, the health check follows automatically to confirm the site actually came back up.
 
 None of this uses long lived AWS access keys. GitHub Actions authenticates to AWS through OIDC: AWS trusts GitHub's identity provider directly, and issues short lived credentials to a specific IAM role only when the workflow is running from this exact repo. No secrets to rotate or leak.
 
+### Security & code quality scanning
+
+- **Trivy** scans the built Docker image for OS and library vulnerabilities before it's pushed. Only fixable CRITICAL/HIGH findings block the pipeline, so noise from unfixable issues doesn't stall deploys.
+- **TFLint** (with the AWS ruleset plugin) lints the Terraform code on every deploy for unused variables, missing provider/version constraints and AWS-specific best practices. Currently set to report-only, not blocking.
 ## Running this yourself
 
 You'll need an AWS account, the AWS CLI configured, Terraform, Docker, and a domain you control in Route53 if you want the HTTPS part to work.
@@ -111,11 +116,14 @@ This leaves the S3 state bucket and ECR repo alone since those are meant to be r
 
 *Screenshot of a successful pipeline run here*
 
+*Screenshot of the CloudWatch dashboard here*
+
 ## Notes on some of the design choices
 
 - The ALB has a `create_before_destroy` lifecycle rule on its target group. Without it, changing certain settings forces a replace and Terraform tries to delete the old target group while a listener still points at it, which fails.
 - The ECS task execution role is created by Terraform rather than assumed to already exist, so the whole thing is reproducible in a fresh AWS account.
 - The GitHub Actions IAM role currently has broad managed policies attached (EC2, ECS, S3, IAM, Route53, ACM, CloudWatch) rather than a tightly scoped custom policy. For a real production setup this should be narrowed down to only what's actually needed, this was a deliberate shortcut for a learning project, not something I'd do for a client.
+- The Docker image's runner stage runs `apk upgrade` (briefly as root, then drops back to the unprivileged `nginx` user) so the base Alpine image's OS packages get security patches at build time rather than shipping whatever was frozen into the base image when it was published.
 
 ## License
 
