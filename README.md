@@ -38,6 +38,7 @@ Everything from the VPC up is created by Terraform. Nothing was left behind from
 ├── infra/
 │   ├── main.tf
 │   ├── variables.tf
+│   ├── .tflint.hcl              # TFLint config (AWS ruleset + Terraform best-practice rules)
 │   └── modules/
 │       ├── vpc/
 │       ├── sg/
