@@ -34,3 +34,8 @@ variable "aws_region" {
   type        = string
   description = "AWS region (used for CloudWatch log config)"
 }
+
+variable "alb_dimension" {
+  type        = string
+  description = "ALB arn_suffix used to feed into CloudWatch dashboard metrics"
+}

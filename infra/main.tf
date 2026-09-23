@@ -70,4 +70,5 @@ module "ecs" {
   target_group_arn   = module.alb.target_group_arn
   app_port           = 8080
   aws_region         = var.region
+  alb_dimension      = module.alb.alb_arn_suffix
 }
