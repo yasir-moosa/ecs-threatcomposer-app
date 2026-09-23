@@ -4,9 +4,7 @@ Threat Composer is an open source app from AWS that helps you build out threat m
 
 I took it and deployed it the way you'd actually run something like this in a job: containerised, running on ECS Fargate, sitting behind a load balancer with a real HTTPS domain, all built with Terraform and deployed through a CI/CD pipeline with no long lived AWS keys anywhere.
 
-Live at: `https://tm.yasirmoosa.tech`
-
-Live at: `https://tm.yasirmoosa.tech`
+URL used: `https://tm.yasirmoosa.tech`
 
 ![Threat Composer demo](images/threat-composer-gif.gif)
 
