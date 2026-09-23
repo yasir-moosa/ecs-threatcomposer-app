@@ -27,7 +27,7 @@ Everything from the VPC up is created by Terraform. Nothing was left behind from
 - S3 bucket holding the Terraform remote state
 - A CloudWatch dashboard (`ecs-threat-app-dashboard`) showing ECS CPU/memory, recent application logs and ALB request count/latency/5XX/healthy-host metrics in one place
 
-*Architecture diagram here*
+![Architecture diagram](images/architecture-diagram.png)
 
 ## Folder layout
 
