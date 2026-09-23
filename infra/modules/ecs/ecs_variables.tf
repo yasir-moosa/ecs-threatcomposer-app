@@ -1,8 +1,3 @@
-variable "vpc_id" {
-  type        = string
-  description = "VPC the ECS service runs in"
-}
-
 variable "private_subnet_ids" {
   type        = list(string)
   description = "Private subnets for the ECS tasks"

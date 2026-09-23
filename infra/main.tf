@@ -64,7 +64,6 @@ module "route53" {
 }
 module "ecs" {
   source             = "./modules/ecs"
-  vpc_id             = module.vpc.vpc_id
   private_subnet_ids = [module.vpc.private_subnet_2a_id, module.vpc.private_subnet_2b_id]
   ecs_task_sg_id     = module.sg.ecs_task_sg_id
   target_group_arn   = module.alb.target_group_arn
