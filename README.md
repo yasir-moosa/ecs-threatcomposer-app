@@ -113,8 +113,6 @@ terraform destroy
 
 This leaves the S3 state bucket and ECR repo alone since those are meant to be reused. The ALB and NAT Gateway both cost money by the hour, so don't leave this running if you're not using it.
 
-![Threat Composer running](images/threat-composer-demo.gif)
-
 ## Successful Pipeline Runs
 
 ### Docker Image Publish
