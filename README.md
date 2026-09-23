@@ -8,7 +8,7 @@ Live at: `https://tm.yasirmoosa.tech`
 
 Live at: `https://tm.yasirmoosa.tech`
 
-![Threat Composer demo](images/threat-composer-demo.gif)
+![Threat Composer demo](images/threat-composer-gif.gif)
 
 ## What this actually does
 
@@ -124,20 +124,20 @@ URL used: `tm.yasirmoosa.tech`
 ## Successful Pipeline Runs
 
 ### Docker Image Publish
-![Build and Push Image](images/pipeline-build-and-push.png)
+![Build and Push Image](images/pipeline1-success.png)
 
 ### Terraform Plan + Apply
-![Terraform Deploy](images/pipeline-terraform-deploy.png)
+![Terraform Deploy](images/pipeline2-success.png)
 
 ### Terraform Plan + Destroy
-![Terraform Destroy](images/pipeline-terraform-destroy.png)
+![Terraform Destroy](images/pipeline3-success.png)
 
 ### Domain URL Health Check
-![Post-Deployment Health Check](images/pipeline-health-check.png)
+![Post-Deployment Health Check](images/pipeline4-success.png)
 
 ## CloudWatch Dashboard
 
-![CloudWatch dashboard](images/dashboard.png)
+![CloudWatch dashboard](images/cloudwatch-dashboard.png)
 
 ## Notes on some of the design choices
 
