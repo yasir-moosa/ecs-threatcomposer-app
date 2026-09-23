@@ -14,7 +14,7 @@ URL used: `https://tm.yasirmoosa.tech`
 - [Architecture](#architecture)
 - [Folder layout](#folder-layout)
 - [CI/CD](#cicd)
-  - [Security and code quality scanning](#security-and-code-quality-scanning)
+- [Security and code quality scanning](#security-and-code-quality-scanning)
 - [Running this yourself](#running-this-yourself)
 - [Tearing it down](#tearing-it-down)
 - [Proof of application working](#proof-of-application-working)
