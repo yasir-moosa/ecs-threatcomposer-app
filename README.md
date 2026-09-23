@@ -8,6 +8,21 @@ URL used: `https://tm.yasirmoosa.tech`
 
 ![Threat Composer demo](images/threat-composer-gif.gif)
 
+## Contents
+
+- [What this actually does](#what-this-actually-does)
+- [Architecture](#architecture)
+- [Folder layout](#folder-layout)
+- [CI/CD](#cicd)
+  - [Security and code quality scanning](#security-and-code-quality-scanning)
+- [Running this yourself](#running-this-yourself)
+- [Tearing it down](#tearing-it-down)
+- [Proof of application working](#proof-of-application-working)
+- [Successful pipeline runs](#successful-pipeline-runs)
+- [CloudWatch dashboard](#cloudwatch-dashboard)
+- [Notes on some of the design choices](#notes-on-some-of-the-design-choices)
+- [License](#license)
+
 ## What this actually does
 
 Threat Composer runs as a Docker container inside ECS Fargate. Traffic comes in through an Application Load Balancer on port 443, gets terminated with a real ACM certificate, and gets routed to whichever Fargate task is healthy at the time. There's no server to patch or SSH into, Fargate handles the compute for you.
@@ -69,7 +84,7 @@ So a normal app change goes: push to main, image gets built and pushed, that's i
 
 None of this uses long lived AWS access keys. GitHub Actions authenticates to AWS through OIDC: AWS trusts GitHub's identity provider directly, and issues short lived credentials to a specific IAM role only when the workflow is running from this exact repo. No secrets to rotate or leak.
 
-### Security & code quality scanning
+### Security and code quality scanning
 
 - **Trivy** scans the built Docker image for OS and library vulnerabilities before it's pushed. Only fixable CRITICAL/HIGH findings block the pipeline, so noise from unfixable issues doesn't stall deploys.
 - **TFLint** (with the AWS ruleset plugin) lints the Terraform code on every deploy for unused variables, missing provider/version constraints and AWS-specific best practices. Currently set to report-only, not blocking.
