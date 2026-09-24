@@ -141,14 +141,17 @@ URL used: `tm.yasirmoosa.tech`
 ### Docker Image Publish
 ![Build and Push Image](images/pipeline1-success.png)
 
+### Terraform Plan 
+![Terraform Plan](images/pipeline2-success.png)
+
 ### Terraform Plan + Apply
-![Terraform Deploy](images/pipeline2-success.png)
+![Terraform Deploy](images/pipeline3-success.png)
 
 ### Terraform Plan + Destroy
-![Terraform Destroy](images/pipeline3-success.png)
+![Terraform Destroy](images/pipeline4-success.png)
 
 ### Domain URL Health Check
-![Post-Deployment Health Check](images/pipeline4-success.png)
+![Post-Deployment Health Check](images/pipeline5-success.png)
 
 ## CloudWatch Dashboard
 
