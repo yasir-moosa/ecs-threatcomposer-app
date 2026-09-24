@@ -17,24 +17,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Run Hadolint (Dockerfile lint)
-        uses: hadolint/hadolint-action@v3.5.0
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
         with:
           dockerfile: Dockerfile
         continue-on-error: true
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
         with:
           role-to-assume: arn:aws:iam::119994407234:role/github-actions-deployment-role
           aws-region: eu-west-2
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
 
       - name: Build image
         env:
@@ -44,7 +44,7 @@ jobs:
         run: docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.35.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           version: v0.69.3
           image-ref: "${{ steps.login-ecr.outputs.registry }}/ecs-project-repo:${{ github.sha }}"
