@@ -147,10 +147,10 @@ URL used: `tm.yasirmoosa.tech`
 ### Terraform Plan + Apply
 ![Terraform Deploy](images/pipeline3-success.png)
 
-### Terraform Plan + Destroy
+### Domain URL Health Check
 ![Terraform Destroy](images/pipeline4-success.png)
 
-### Domain URL Health Check
+### Terraform Plan + Destroy
 ![Post-Deployment Health Check](images/pipeline5-success.png)
 
 ## CloudWatch Dashboard
