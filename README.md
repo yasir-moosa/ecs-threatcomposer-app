@@ -75,7 +75,7 @@ Everything from the VPC up is created by Terraform. Nothing was left behind from
 There are four workflows, and only one pair of them is actually chained together:
 
 1. **Build and Push Image** runs automatically on a push that touches `app/` or the Dockerfile (or can be triggered manually). It builds the image, runs a **Trivy vulnerability scan** against it (fails the job on any CRITICAL or HIGH severity fixable CVE so a vulnerable image never reaches ECR) then tags it with the commit SHA and pushes it to ECR.
-2. **Terraform Deploy** is manual only, you trigger it from the Actions tab. It's split into two jobs: `terraform-plan` runs `init` lints the Terraform code with **TFLint** (AWS ruleset + best-practice rules, non-blocking for now) then `plan`, saving the plan as an artifact; `terraform-apply` downloads that exact plan and applies it. This way what gets applied is guaranteed to be what the plan showed, not a fresh plan that might have drifted.
+2. **Terraform Deploy** is manual only, you trigger it from the Actions tab. It's split into two jobs: `terraform-plan` runs `init`, `plan` and a Checkov scan against the Terraform code, saving the plan as an artifact then `terraform-apply` downloads that exact plan and applies it. This way what gets applied is guaranteed to be what the plan showed, not a fresh plan that might have drifted.
 3. **Post-Deploy Health Check** runs automatically right after Terraform Deploy finishes successfully (or manually on its own). It waits 2 minutes for the ECS tasks to stabilize then curls the live site with up to 10 retries (30s apart) before failing, so it doesn't false-alarm on a service that's still starting up.
 4. **Terraform Destroy** is manual only, and requires typing the word "destroy" into a confirmation field before it'll run anything. Same two-job pattern as Deploy: a `terraform-destroy-plan` job saves exactly what will be torn down, then `terraform-destroy-apply` destroys precisely that.
 
@@ -83,10 +83,11 @@ So a normal app change goes: push to main, image gets built and pushed, that's i
 
 None of this uses long lived AWS access keys. GitHub Actions authenticates to AWS through OIDC: AWS trusts GitHub's identity provider directly, and issues short lived credentials to a specific IAM role only when the workflow is running from this exact repo. No secrets to rotate or leak.
 
-### Security and code quality scanning
+## Security and code quality scanning
 
 - **Trivy** scans the built Docker image for OS and library vulnerabilities before it's pushed. Only fixable CRITICAL/HIGH findings block the pipeline, so noise from unfixable issues doesn't stall deploys.
 - **TFLint** (with the AWS ruleset plugin) lints the Terraform code on every deploy for unused variables, missing provider/version constraints and AWS-specific best practices. Currently set to report-only, not blocking.
+- **Checkov** scans the same Terraform code for IaC misconfigurations, such as unencrypted resources, overly permissive security groups and missing logging in the same `terraform-plan` job. Set to `soft_fail: true` so findings show up in the job logs but don't block a deploy, same report-only posture as TFLint for now.
 ## Running this yourself
 
 You'll need an AWS account, the AWS CLI configured, Terraform, Docker, and a domain you control in Route53 if you want the HTTPS part to work.
