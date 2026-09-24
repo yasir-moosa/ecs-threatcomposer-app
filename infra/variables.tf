@@ -15,3 +15,4 @@ variable "subdomain" {
   description = "subdomain prefix for the app"
 
 }
+# test to confirm plan is triggered by PR
