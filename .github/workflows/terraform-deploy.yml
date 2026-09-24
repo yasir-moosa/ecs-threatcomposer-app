@@ -26,6 +26,7 @@ jobs:
       - name: Terraform Init
         working-directory: infra
         run: terraform init
+
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v6
         with:
@@ -37,6 +38,15 @@ jobs:
           tflint --init
           tflint --recursive
         continue-on-error: true
+
+      - name: Run Checkov IaC Scan
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: infra
+          framework: terraform
+          soft_fail: true
+          output_format: cli
+
       - name: Terraform Plan
         working-directory: infra
         run: terraform plan -out=tfplan
