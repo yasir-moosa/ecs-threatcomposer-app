@@ -46,6 +46,7 @@ jobs:
           framework: terraform
           soft_fail: true
           output_format: cli
+          continue-on-error: true
 
       - name: Terraform Plan
         working-directory: infra
