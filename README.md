@@ -47,10 +47,11 @@ Everything from the VPC up is created by Terraform.
 
 ```
 .
-├── app/                        # the app source + Dockerfile
+├── app/                        # the app source
+├── Dockerfile                  # builds the app image
 ├── bootstrap/
-│   ├── s3_backend/              # one-off: creates the S3 bucket for remote state
-│   └── ecr_bootstrap/           # one-off: creates the ECR repo
+│   ├── s3_boostrap/             # one-off: creates the S3 bucket for remote state
+│   └── ecr_bootstrap/           # one-off: creates the ECR repository
 ├── infra/
 │   ├── main.tf
 │   ├── variables.tf
@@ -65,6 +66,7 @@ Everything from the VPC up is created by Terraform.
 └── .github/
     └── workflows/
         ├── build-and-push.yml
+        ├── terraform-plan.yml
         ├── terraform-deploy.yml
         ├── health-check.yml
         └── terraform-destroy.yml
