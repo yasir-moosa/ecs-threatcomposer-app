@@ -26,6 +26,8 @@ I took it and built out a full production-style deployment for it: containerised
 
 Clone the repo and run it locally. Use Yarn for a live dev server or Docker to run the exact image that gets deployed to ECS.
 
+**Clone the repo**
+
 Use the following commands to clone the repo:
 
 ```bash
@@ -69,6 +71,8 @@ Everything from the VPC up is created by Terraform.
 
 ## Architecture
 
+![Architecture diagram](images/architecture-diagram.png)
+
 - A VPC spanning two Availability Zones with public and private subnets in each
 - A regional (multi-AZ) NAT Gateway so the Fargate tasks in the private subnets can pull the image from the ECR and reach the internet without needing one NAT Gateway per AZ
 - An Application Load Balancer in the public subnets, listening on 80 and 443
@@ -79,8 +83,6 @@ Everything from the VPC up is created by Terraform.
 - Route53 hosted zone and A record pointing the subdomain at the load balancer
 - S3 bucket holding the Terraform remote state
 - A CloudWatch dashboard (`ecs-threat-app-dashboard`) showing ECS CPU/memory, recent application logs and ALB request count/latency/5XX/healthy-host metrics in one place
-
-![Architecture diagram](images/architecture-diagram.png)
 
 ## Folder layout
 
