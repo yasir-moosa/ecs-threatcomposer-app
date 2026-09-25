@@ -9,12 +9,12 @@ I took it and built out a full production-style deployment for it: containerised
 
 ## Contents
 
+- [Running the app locally](#running-the-app-locally)
 - [The deployment](#the-deployment)
 - [Architecture](#architecture)
 - [Folder layout](#folder-layout)
 - [CI/CD](#cicd)
 - [Security and code quality scanning](#security-and-code-quality-scanning)
-- [Running this yourself](#running-this-yourself)
 - [Tearing it down](#tearing-it-down)
 - [Proof of application working](#proof-of-application-working)
 - [Successful pipeline runs](#successful-pipeline-runs)
@@ -86,22 +86,48 @@ Everything from the VPC up is created by Terraform.
 
 ```
 .
-├── app/                         # the app source
-├── Dockerfile                   # builds the app image
+├── app/
+├── Dockerfile
 ├── bootstrap/
-│   ├── s3_boostrap/             # one-off: creates the S3 bucket for remote state
-│   └── ecr_bootstrap/           # one-off: creates the ECR repository
+│   ├── s3_bootstrap/
+│   │   ├── s3_bootstrap.tf
+│   │   └── variables.tf
+│   └── ecr_bootstrap/
+│       ├── ecr_bootstrap.tf
+│       └── ecr_variables.tf
+│
 ├── infra/
 │   ├── main.tf
+│   ├── provider.tf
+│   ├── outputs.tf
 │   ├── variables.tf
-│   ├── .tflint.hcl              # TFLint config (AWS ruleset + Terraform best-practice rules)
-│   └── modules/
-│       ├── vpc/
-│       ├── sg/
-│       ├── alb/
-│       ├── ecs/
-│       ├── acm/
-│       └── route53/
+│   ├── .tflint.hcl
+│
+│   ├── modules/
+│   │   ├── vpc/
+│   │   │   ├── vpc_main.tf
+│   │   │   ├── vpc_variables.tf
+│   │   │   └── vpc_output.tf
+│   │   ├── sg/
+│   │   │   ├── sg_main.tf
+│   │   │   ├── sg_variables.tf
+│   │   │   └── sg_outputs.tf
+│   │   ├── alb/
+│   │   │   ├── alb_main.tf
+│   │   │   ├── alb_variables.tf
+│   │   │   └── alb_output.tf
+│   │   ├── ecs/
+│   │   │   ├── ecs_main.tf
+│   │   │   ├── ecs_variables.tf
+│   │   │   └── ecs_outputs.tf
+│   │   ├── acm/
+│   │   │   ├── acm_main.tf
+│   │   │   ├── acm_variables.tf
+│   │   │   └── acm_outputs.tf
+│   │   └── route53/
+│   │       ├── route53_main.tf
+│   │       └── route53_variables.tf
+│
 └── .github/
     └── workflows/
         ├── build-and-push.yml
