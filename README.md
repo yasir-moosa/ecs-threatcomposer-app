@@ -2,14 +2,14 @@
 
 Threat Composer is an open source app from AWS that helps you build out threat models, you can have a play with it yourself here: [Threat Composer Tool](https://awslabs.github.io/threat-composer/workspaces/default/dashboard). 
 
-I took it and deployed it the way you'd actually run something like this in a job: containerised, running on ECS Fargate, sitting behind a load balancer with a real HTTPS domain, all built with Terraform and deployed through a CI/CD pipeline with no long lived AWS keys anywhere.
+I took it and built out a full production-style deployment for it: containerised, running on ECS Fargate, sitting behind a load balancer with a real HTTPS domain, all built with Terraform and deployed through a CI/CD pipeline with no long lived AWS keys anywhere.
 
 
 ![Threat Composer demo](images/threat-composer-gif.gif)
 
 ## Contents
 
-- [What this actually does](#what-this-actually-does)
+- [The deployment](#the-deployment)
 - [Architecture](#architecture)
 - [Folder layout](#folder-layout)
 - [CI/CD](#cicd)
@@ -22,21 +22,21 @@ I took it and deployed it the way you'd actually run something like this in a jo
 - [Notes on some of the design choices](#notes-on-some-of-the-design-choices)
 - [License](#license)
 
-## What this actually does
+## The deployment
 
-Threat Composer runs as a Docker container inside ECS Fargate. Traffic comes in through an Application Load Balancer on port 443, gets terminated with a real ACM certificate, and gets routed to whichever Fargate task is healthy at the time. There's no server to patch or SSH into, Fargate handles the compute for you.
+Threat Composer application runs as a Docker container inside ECS Fargate. Traffic comes in through an Application Load Balancer on port 443, gets terminated with a real ACM certificate and gets routed to whichever Fargate task is healthy at the time. There's no server to patch or SSH into, Fargate handles the compute for you.
 
-Everything from the VPC up is created by Terraform. Nothing was left behind from the manual "ClickOps" phase of the assignment, that infrastructure was built once by hand to understand it, then torn down and rebuilt entirely as code.
+Everything from the VPC up is created by Terraform. 
 
 ## Architecture
 
-- A VPC spanning two Availability Zones, with public and private subnets in each
-- A regional (multi-AZ) NAT Gateway so the Fargate tasks in the private subnets can pull the image from ECR and reach the internet without needing one NAT Gateway per AZ
+- A VPC spanning two Availability Zones with public and private subnets in each
+- A regional (multi-AZ) NAT Gateway so the Fargate tasks in the private subnets can pull the image from the ECR and reach the internet without needing one NAT Gateway per AZ
 - An Application Load Balancer in the public subnets, listening on 80 and 443
 - Port 80 just redirects straight to 443, nothing serves plain HTTP
-- ECS Fargate service running the Threat Composer container, in the private subnets
+- ECS Fargate service running the Threat Composer container in the private subnets
 - ECR repository storing the built Docker image
-- ACM certificate for `tm.yasirmoosa.tech`, validated automatically through a DNS record in Route53
+- ACM certificate for `tm.yasirmoosa.tech` is validated automatically through a DNS record in Route53
 - Route53 hosted zone and A record pointing the subdomain at the load balancer
 - S3 bucket holding the Terraform remote state
 - A CloudWatch dashboard (`ecs-threat-app-dashboard`) showing ECS CPU/memory, recent application logs and ALB request count/latency/5XX/healthy-host metrics in one place
