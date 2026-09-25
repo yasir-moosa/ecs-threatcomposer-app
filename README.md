@@ -198,4 +198,4 @@ URL used: `tm.yasirmoosa.tech`
 
 ## License
 
-MIT.
+Infra, CI/CD and Dockerfile are MIT licensed. Threat Composer is licensed under Apache License 2.0.
