@@ -2,8 +2,7 @@
 
 Threat Composer is an open source app from AWS that helps you build out threat models, you can have a play with it yourself here: [Threat Composer Tool](https://awslabs.github.io/threat-composer/workspaces/default/dashboard). 
 
-I took it and built out a full production-style deployment for it: containerised, running on ECS Fargate, sitting behind a load balancer with a real HTTPS domain, all built with Terraform and deployed through a CI/CD pipeline with no long lived AWS keys anywhere.
-
+I took it and built out a full production-style deployment for it. It's containerised, running on ECS Fargate, sitting behind a load balancer with a real HTTPS domain, all built with Terraform and deployed through a CI/CD pipeline with no long lived AWS keys anywhere.
 
 ![Threat Composer demo](images/threat-composer-gif.gif)
 
@@ -15,7 +14,6 @@ I took it and built out a full production-style deployment for it: containerised
 - [Folder layout](#folder-layout)
 - [CI/CD](#cicd)
 - [Security and code quality scanning](#security-and-code-quality-scanning)
-- [Tearing it down](#tearing-it-down)
 - [Proof of application working](#proof-of-application-working)
 - [Successful pipeline runs](#successful-pipeline-runs)
 - [CloudWatch dashboard](#cloudwatch-dashboard)
@@ -63,6 +61,7 @@ Then check it's healthy:
 curl http://localhost:8080/health
 # {"status":"ok"}
 ```
+
 ## The deployment
 
 Threat Composer application runs as a Docker container inside ECS Fargate. Traffic comes in through an Application Load Balancer on port 443, gets terminated with a real ACM certificate and gets routed to whichever Fargate task is healthy at the time. There's no server to patch or SSH into, Fargate handles the compute for you.
@@ -166,7 +165,7 @@ URL used: `tm.yasirmoosa.tech`
 
 ![Threat Composer running](images/threat-composer-app.png)
 
-## Successful Pipeline Runs
+## Successful pipeline runs
 
 ### Docker Image Publish
 ![Build and Push Image](images/pipeline1-success.png)
@@ -186,7 +185,7 @@ URL used: `tm.yasirmoosa.tech`
 ### Terraform Plan + Destroy
 ![Post-Deployment Health Check](images/pipeline5-success.png)
 
-## CloudWatch Dashboard
+## CloudWatch dashboard
 
 ![CloudWatch dashboard](images/cloudwatch-dashboard.png)
 
