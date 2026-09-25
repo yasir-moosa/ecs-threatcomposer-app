@@ -47,8 +47,8 @@ Everything from the VPC up is created by Terraform.
 
 ```
 .
-├── app/                        # the app source
-├── Dockerfile                  # builds the app image
+├── app/                         # the app source
+├── Dockerfile                   # builds the app image
 ├── bootstrap/
 │   ├── s3_boostrap/             # one-off: creates the S3 bucket for remote state
 │   └── ecr_bootstrap/           # one-off: creates the ECR repository
@@ -74,25 +74,24 @@ Everything from the VPC up is created by Terraform.
 
 ## CI/CD
 
-There are four workflows, and only one pair of them is actually chained together:
+There are five workflows and only one pair of them is actually chained together:
 
 1. **Build and Push Image** runs automatically on a push that touches `app/` or the Dockerfile (or can be triggered manually). It lints the Dockerfile with **Hadolint** first (report-only for now), builds the image, runs a **Trivy vulnerability scan** against it (fails the job on any CRITICAL or HIGH severity fixable CVE so a vulnerable image never reaches ECR) then tags it with the commit SHA and pushes it to ECR.
-2. **Terraform Deploy** is manual only, you trigger it from the Actions tab. It's split into two jobs: `terraform-plan` runs `init`, `plan` and a Checkov scan against the Terraform code, saving the plan as an artifact; `terraform-apply` then requires manual approval (see [Security and code quality scanning](#security-and-code-quality-scanning)) before it downloads that exact plan and applies it. This way what gets applied is guaranteed to be what the plan showed, not a fresh plan that might have drifted and nothing reaches AWS without a deliberate approval click.
-3. **Post-Deploy Health Check** runs automatically right after Terraform Deploy finishes successfully (or manually on its own). It waits 2 minutes for the ECS tasks to stabilize then curls the live site with up to 10 retries (30s apart) before failing, so it doesn't false-alarm on a service that's still starting up.
-4. **Terraform Destroy** is manual only, and requires typing the word "destroy" into a confirmation field before it'll run anything. Same two-job pattern as Deploy: a `terraform-destroy-plan` job saves exactly what will be torn down then `terraform-destroy-apply` requires the same manual approval before it destroys precisely that.
+2. **Terraform Plan** runs automatically on any pull request that touches `infra/**` (or can be triggered manually). It's read-only, nothing gets applied. It runs `init`, a TFLint pass, a Checkov scan then `terraform plan` and nothing gets applied here. It just gives reviewers a look at what a change to the infra would actually do before it's merged.
+3. **Terraform Deploy** is manual only, you trigger it from the Actions tab. It's split into two jobs: `terraform-plan` runs `init`, `plan` and a Checkov scan against the Terraform code, saving the plan as an artifact. `terraform-apply` then requires manual approval (see [Security and code quality scanning](#security-and-code-quality-scanning)) before it downloads that exact plan and applies it. This way what gets applied is guaranteed to be what the plan showed, not a fresh plan that might have drifted and nothing reaches AWS without a deliberate approval click.
+4. **Post-Deploy Health Check** runs automatically right after Terraform Deploy finishes successfully (or manually on its own). It waits 2 minutes for the ECS tasks to stabilize then curls the live site with up to 10 retries (30s apart) before failing, so it doesn't falsely fail on a service that's still starting up.
+5. **Terraform Destroy** is manual only and requires typing the word "destroy" into a confirmation field before it'll run anything. It follows the same two-job pattern as Deploy. A `terraform-destroy-plan` job saves exactly what will be torn down then `terraform-destroy-apply` requires the same manual approval before it destroys it.
 
-So a normal app change goes: push to main, image gets built and pushed, that's it, nothing else runs on its own. Deploying the new image into the infra is a deliberate, manual step, and once you trigger it, the health check follows automatically to confirm the site actually came back up.
-
-None of this uses long lived AWS access keys. GitHub Actions authenticates to AWS through OIDC: AWS trusts GitHub's identity provider directly, and issues short lived credentials to a specific IAM role only when the workflow is running from this exact repo. No secrets to rotate or leak.
+None of this uses long lived AWS access keys. GitHub Actions authenticates to AWS through OIDC (OpenID Connect). AWS trusts GitHub's identity provider directly and issues short lived credentials to a specific IAM role only when the workflow is running from this exact repo. No secrets to rotate or leak.
 
 ## Security and code quality scanning
 
-- **Trivy** scans the built Docker image for OS and library vulnerabilities before it's pushed. Only fixable CRITICAL/HIGH findings block the pipeline, so noise from unfixable issues doesn't stall deploys.
-- **TFLint** (with the AWS ruleset plugin) lints the Terraform code on every deploy for unused variables, missing provider/version constraints and AWS-specific best practices. Currently set to report-only, not blocking.
-- **Checkov** scans the same Terraform code for IaC misconfigurations, such as unencrypted resources, overly permissive security groups and missing logging in the same `terraform-plan` job. Set to `soft_fail: true` so findings show up in the job logs but don't block a deploy, same report-only posture as TFLint for now.
-- **Hadolint** lints the `Dockerfile` itself before it's built, checking things like pinned base image versions, avoiding root where unnecessary, and general Dockerfile best practices. Currently report-only, same as TFLint.
-- **Deployment approval**: `terraform-apply` and `terraform-destroy-apply` both target a `production` GitHub Environment with required reviewers, restricted to the `main` branch. Neither job runs automatically once its plan step finishes, they sit in a "Waiting" state until a reviewer approves the run. I'm currently the only reviewer, so it's a self-approval gate rather than a second-person sign-off but it still means nothing reaches AWS without a deliberate, separate approval step.
-- **Pinned actions**: every third-party GitHub Action across all four workflows is pinned to its exact commit SHA rather than a mutable version tag, each with a trailing comment noting the version (e.g. `actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4`). A tag like `v4` can be re-pointed to different code later without warning, which is exactly what happened in a real 2025 supply-chain attack on a widely-used action (`tj-actions/changed-files`) that leaked secrets across thousands of repos. Pinning to the commit hash means the pipeline always runs the exact code that was reviewed regardless of what the tag points to afterward.
+- **Trivy** scans the built Docker image for OS and library vulnerabilities before it's pushed. Only fixable CRITICAL/HIGH findings block the pipeline so unfixable issues don't stall deployments.
+- **TFLint** (with the AWS ruleset plugin) lints the Terraform code on every deployment for unused variables, missing provider/version constraints and AWS-specific best practices. Currently set to report-only, not blocking.
+- **Checkov** scans the same Terraform code for IaC misconfigurations such as unencrypted resources, overly permissive security groups and missing logging in the same `terraform-plan` job. It's currently set to `soft_fail: true` so findings show up in the job logs but don't actually block a deployment. This is similar as the TFLint for now.
+- **Hadolint** lints the `Dockerfile` itself before it's built. It checks things like pinned base image versions, avoiding root where unnecessary and general Dockerfile best practices. Currently report-only similar to Checkov and TFLint.
+- **Deployment approval**: `terraform-apply` (in **Terraform Deploy**) and `terraform-destroy-apply` (in **Terraform Destroy**) are gated by a `production` GitHub Environment with required reviewers. Both sit in a "Waiting" state until approved so nothing runs automatically. I'm currently the only reviewer so it's a self-approval gate for now but it still forces a deliberate step before anything reaches AWS.
+- **Pinned actions**: Every third-party GitHub Action is pinned to its exact commit SHA and not a mutable tag. Each one has the version noted in the comment after it (e.g. `actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4`). Tags like `v4` can be silently repointed to different code, which is how a real 2025 supply-chain attack on `tj-actions/changed-files` leaked secrets across thousands of repos ([you can read more about it here](https://www.wiz.io/blog/github-action-tj-actions-changed-files-supply-chain-attack-cve-2025-30066)). Pinning to the SHA guarantees the pipeline always runs the code that was actually verified.
 
 ## Running this yourself
 
