@@ -199,7 +199,7 @@ URL used: `tm.yasirmoosa.tech`
 
 ![Full build vs multistage build](images/docker-image-sizes.png)
 
-The full build stage alone is 2.91GB, the actual image that gets deployed is 141MB, about a 95% reduction.
+The full build stage alone is 2.91GB, the actual image that gets deployed is 141MB which is about a 95% reduction.
 
 - OIDC is used across the pipeline so GitHub Actions gets short-lived AWS credentials scoped to a specific IAM role rather than long-lived access keys stored as secrets.
 - The app runs on ECS Fargate rather than something like EKS. For a single container workload, Kubernetes' overhead (control plane, cluster management) isn't justified, Fargate provides serverless compute without needing to manage or patch servers.
