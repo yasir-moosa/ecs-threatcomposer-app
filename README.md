@@ -17,7 +17,8 @@ I took it and built out a full production-style deployment for it. It's containe
 - [Proof of application working](#proof-of-application-working)
 - [Successful pipeline runs](#successful-pipeline-runs)
 - [CloudWatch dashboard](#cloudwatch-dashboard)
-- [Notes on some of the design choices](#notes-on-some-of-the-design-choices)
+- [Architectural decisions](#architectural-decisions)
+- [Future improvements](#future-improvements)
 - [License](#license)
 
 ## Running the app locally
