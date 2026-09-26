@@ -196,6 +196,11 @@ URL used: `tm.yasirmoosa.tech`
 - The ECS task execution role is created by Terraform rather than assumed to already exist so the whole thing is reproducible in a fresh AWS account.
 - The GitHub Actions IAM role currently has broad managed policies attached (EC2, ECS, S3, IAM, Route53, ACM, CloudWatch) rather than a tightly scoped custom policy. For a real production setup this should be narrowed down to only what's actually needed.
 - Docker uses a multi-stage build. Node builds the app in one stage, then only the built static files get copied into a slim nginx stage, so build tools and dependencies never make it into the final image. The runner stage also runs `apk upgrade` (briefly as root, then drops back to the unprivileged `nginx` user) so the base Alpine image's OS packages get security patches at build time, and traffic is served by that non-root user rather than root.
+
+![Full build vs multistage build](images/docker-image-sizes.png)
+
+The full build stage alone is 2.91GB, the actual image that gets deployed is 141MB, about a 95% reduction.
+
 - OIDC is used across the pipeline so GitHub Actions gets short-lived AWS credentials scoped to a specific IAM role rather than long-lived access keys stored as secrets.
 - The app runs on ECS Fargate rather than something like EKS. For a single container workload, Kubernetes' overhead (control plane, cluster management) isn't justified, Fargate provides serverless compute without needing to manage or patch servers.
 - The domain's DNS stays in Route53 rather than a third-party provider which keeps ACM's DNS validation fully automatic since Route53 and ACM are natively integrated, no manual CNAME copying required.
