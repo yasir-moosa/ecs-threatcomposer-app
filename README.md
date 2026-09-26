@@ -189,12 +189,25 @@ URL used: `tm.yasirmoosa.tech`
 
 ![CloudWatch dashboard](images/cloudwatch-dashboard.png)
 
-## Notes on some of the design choices
+## Architectural decisions
 
-- The ALB has a `create_before_destroy` lifecycle rule on its target group. Without it, changing certain settings forces a replace and Terraform tries to delete the old target group while a listener still points at it, which fails.
-- The ECS task execution role is created by Terraform rather than assumed to already exist, so the whole thing is reproducible in a fresh AWS account.
-- The GitHub Actions IAM role currently has broad managed policies attached (EC2, ECS, S3, IAM, Route53, ACM, CloudWatch) rather than a tightly scoped custom policy. For a real production setup this should be narrowed down to only what's actually needed, this was a deliberate shortcut for a learning project, not something I'd do for a client.
-- The Docker image's runner stage runs `apk upgrade` (briefly as root, then drops back to the unprivileged `nginx` user) so the base Alpine image's OS packages get security patches at build time rather than shipping whatever was frozen into the base image when it was published.
+- The ALB has a `create_before_destroy` lifecycle rule on its target group. Without it, changing certain settings forces a replace and Terraform tries to delete the old target group while a listener still points at it which fails.
+- The ECS task execution role is created by Terraform rather than assumed to already exist so the whole thing is reproducible in a fresh AWS account.
+- The GitHub Actions IAM role currently has broad managed policies attached (EC2, ECS, S3, IAM, Route53, ACM, CloudWatch) rather than a tightly scoped custom policy. For a real production setup this should be narrowed down to only what's actually needed.
+- Docker uses a multi-stage build. Node builds the app in one stage, then only the built static files get copied into a slim nginx stage, so build tools and dependencies never make it into the final image. The runner stage also runs `apk upgrade` (briefly as root, then drops back to the unprivileged `nginx` user) so the base Alpine image's OS packages get security patches at build time, and traffic is served by that non-root user rather than root.
+- OIDC is used across the pipeline so GitHub Actions gets short-lived AWS credentials scoped to a specific IAM role rather than long-lived access keys stored as secrets.
+- The app runs on ECS Fargate rather than something like EKS. For a single container workload, Kubernetes' overhead (control plane, cluster management) isn't justified, Fargate provides serverless compute without needing to manage or patch servers.
+- The domain's DNS stays in Route53 rather than a third-party provider which keeps ACM's DNS validation fully automatic since Route53 and ACM are natively integrated, no manual CNAME copying required.
+- Terraform is split into separate modules (vpc, sg, alb, ecs, acm, route53) rather than one large file so each piece can be understood and changed independently.
+- No AWS credentials are stored as GitHub Secrets at all, OIDC removes that requirement entirely so there's nothing sitting in the repo that could leak.
+
+## Future improvements
+
+- Scope down the single GitHub Actions IAM role into least-privilege, function-specific roles (build, deploy, destroy) instead of one role with broad managed policies attached.
+- Move TFLint, Checkov, and Hadolint from report-only to blocking once the current findings are cleaned up.
+- Add a second required reviewer for deployment approvals rather than the current self-approval setup.
+- Run bootstrapping (the initial S3 backend and ECR repo creation) as its own pipeline, removing the manual first step before the rest of the infrastructure can deploy.
+- Add ECS Service Auto Scaling based on CPU/memory (or ALB request count) so the Fargate service can scale horizontally under load rather than running a fixed task count.
 
 ## License
 
